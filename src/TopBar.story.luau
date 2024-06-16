@@ -35,22 +35,22 @@ local function TopBarButton(props)
                 Position = UDim2.new(0.5, 0, 0.5, 0);
 
                 --# Hover Color
-                ImageColor3 = Fusion:Computed(function(use)
-                    if Fusion:peek(isHovering) then
+                ImageColor3 = Fusion:Spring(Fusion:Computed(function(use)
+                    if use(isHovering) == true then
                         return Color3.fromHex("#e6e6e6")
                     else 
-                        return Color3.new("#ffffff")
+                        return Color3.fromHex("#FFFFFF")
                     end
-                end);
+                end));
                 
                 --# Hover Size
-                Size = Fusion:Spring(Fusion:Computed(function()
-                    if Fusion:peek(isHovering) == true then 
+                Size = Fusion:Spring(Fusion:Computed(function(use)
+                    if use(isHovering) == true then 
                         return props.MaxImgSize or UDim2.new(0.8, 0, 0.8, 0);
                     else 
                         return UDim2.new(props.MaxImgSize.X.Scale*0.85, 0, props.MaxImgSize.Y.Scale*0.85, 0)
                     end
-                end), 0.05);
+                end), 20);
 
                 [OnEvent "Activated"] = function()
                     if props.OnClick ~= nil then 
