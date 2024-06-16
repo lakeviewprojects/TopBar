@@ -1,10 +1,9 @@
-local ProximityPromptService = game:GetService("ProximityPromptService")
-local ProximityPromptService = game:GetService("ProximityPromptService")
 local Player = game:GetService("Players").LocalPlayer
 
 --[[ Dependancies ]]
 local ReplicadStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicadStorage:WaitForChild("Fusion"))
+local Children,OnEvent = Fusion.Children, Fusion.OnEvent
 
 --[[ API Services ]]
 
@@ -14,26 +13,7 @@ local SocialService = game:GetService("SocialService");
 local function TopBarButton(props)
 
     local isHovering = Fusion:Value(false)
-
-    local imageHover = Fusion:Computed(function(use)
-        if Fusion:peek(isHovering) then
-            return Color3.fromHex("#e6e6e6")
-        else 
-            return Color3.new("#ffffff")
-        end
-    end)
-    
-    local imageSize = Fusion:Spring(Fusion:Computed(function()
-        if Fusion:peek(isHovering) == true then 
-            return props.MaxImgSize or UDim2.new(0.8, 0, 0.8, 0);
-        else 
-            if props.MaxImgSize ~= nil then 
-                return UDim2.new(props.MaxImgSize.X.Scale*0.8, 0, props.MaxImgSize.Y.Scale*0.8, 0)
-            else 
-                return UDim2.new(0.6, 0, 0.6, 0);
-            end
-        end
-    end), 0.05, 0.002)
+    props.MaxImgSize = props.MaxImgSize or UDim2.new(0.8, 0, 0.8, 0)
 
     return Fusion:New "Frame" {
         BackgroundTransparency = 0.4;
@@ -41,7 +21,7 @@ local function TopBarButton(props)
         Visible = props.Visible or true;
 
         Size = UDim2.new(1, 0, 1, 0);
-        [Fusion.Children] = {
+        [Children] = {
             Fusion:New "UIAspectRatioConstraint" {};
 
             Fusion:New "UICorner" {
@@ -53,21 +33,37 @@ local function TopBarButton(props)
                 Image = props.Image;
                 AnchorPoint = Vector2.new(0.5, 0.5);
                 Position = UDim2.new(0.5, 0, 0.5, 0);
-                ImageColor3 = imageColor;
-                Size = imageSize;
 
-                [Fusion.OnEvent "Activated"] = function()
+                --# Hover Color
+                ImageColor3 = Fusion:Computed(function(use)
+                    if Fusion:peek(isHovering) then
+                        return Color3.fromHex("#e6e6e6")
+                    else 
+                        return Color3.new("#ffffff")
+                    end
+                end);
+                
+                --# Hover Size
+                Size = Fusion:Spring(Fusion:Computed(function()
+                    if Fusion:peek(isHovering) == true then 
+                        return props.MaxImgSize or UDim2.new(0.8, 0, 0.8, 0);
+                    else 
+                        return UDim2.new(props.MaxImgSize.X.Scale*0.85, 0, props.MaxImgSize.Y.Scale*0.85, 0)
+                    end
+                end), 0.05);
+
+                [OnEvent "Activated"] = function()
                     if props.OnClick ~= nil then 
                         props.OnClick()
                     end
                 end;
 
-                [Fusion.OnEvent "MouseEnter"] = function()
+                [OnEvent "MouseEnter"] = function()
                     isHovering:set(true)
                     --print(Fusion:peek(imageHover))
                 end;
 
-                [Fusion.OnEvent "MouseLeave"] = function()
+                [OnEvent "MouseLeave"] = function()
                     isHovering:set(false)
                 end;
 
@@ -90,14 +86,13 @@ return function (Parent)
         Name = "TopBar";
         Parent = Parent;
         ScreenInsets = Enum.ScreenInsets.TopbarSafeInsets;
-        
-        
-        [Fusion.Children] = {
+    
+        [Children] = {
             Fusion:New "Frame" {
                 BackgroundTransparency = 1;
                 Size = UDim2.new(1, 0, 1, 0);
                 --
-                [Fusion.Children] = {
+                [Children] = {
                     Fusion:New "UIListLayout" {
                         FillDirection = Enum.FillDirection.Horizontal;
                         Padding = UDim.new(0, 10);
@@ -107,7 +102,8 @@ return function (Parent)
                         PaddingTop = UDim.new(0.2, 0);
                         PaddingLeft = UDim.new(0, 10);
                     };
-
+                    
+                    -- Favourite
                     TopBarButton {
                         Image = "rbxassetid://4458882827";
                         MaxImgSize = UDim2.new(0.9, 0, 0.9, 0);
@@ -116,7 +112,8 @@ return function (Parent)
                             AvatarEditorService:PromptSetFavorite(game.PlaceId, 1, true)
                         end
                     };
-                    --
+                    
+                    -- Friend Invite
                     TopBarButton {
                         Image = "rbxassetid://464353108";
                         MaxImgSize = UDim2.new(0.8, 0, 0.8, 0);
@@ -132,7 +129,8 @@ return function (Parent)
         }
     }
 
-    --[[ Cleanup ]]
+    --[[ module ]]
+
     return function ()
         TopBar:Destroy();
     end

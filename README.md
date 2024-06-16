@@ -17,9 +17,8 @@ https://github.com/dphfox/Fusion
     "StarterGui" : {
       "$ignoreUnknownInstances": true,
       "$path": "src/StarterGui", 
-      "FTopBar":{
-        "$ignoreUnknownInstances": true,
-        "$path": "Submodules/TopBar"
+      "TopBar":{
+        "$path": "Submodules/TopBar/topbar.project.json"
       }
     },
 ```
