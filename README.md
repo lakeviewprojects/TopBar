@@ -19,7 +19,7 @@ https://github.com/dphfox/Fusion
       "$path": "src/StarterGui", 
       "FTopBar":{
         "$ignoreUnknownInstances": true,
-        "$path": "Submodules/FTopBar"
+        "$path": "Submodules/TopBar"
       }
     },
 ```
