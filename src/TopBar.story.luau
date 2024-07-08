@@ -72,14 +72,14 @@ local function TopBarButton(props)
     }
 end
 
-local function CanInviteFriend(sendingPlayer)
+local function CanInviteFriend(sendingPlayer : userdata)
 	local success, canSend = pcall(function()
 		return SocialService:CanSendGameInviteAsync(sendingPlayer)
 	end)
 	return success and canSend
 end
 
-return function (Parent)
+return function (Parent : userdata?)
     Parent = Parent or script.Parent
 
     local TopBar = Fusion:New "ScreenGui" {
