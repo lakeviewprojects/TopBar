@@ -79,6 +79,21 @@ local function CanInviteFriend(sendingPlayer : userdata)
 	return success and canSend
 end
 
+local ShopModuleInstalled = function(Parent : userdata)
+    local _shop = Parent:FindFirstChild("Shop")
+    return _shop ~= nil and _shop:IsA("ModuleScript") == true
+end
+
+local VIPImage = function()
+    local vip = Player:FindFirstChild("VIP")
+    if vip ~= nil then 
+        if vip.Value == true then 
+            return "rbxassetid://18400213004"
+        end 
+    end 
+    return "rbxassetid://18400214733"
+end
+
 return function (Parent : userdata?)
     Parent = Parent or script.Parent
 
@@ -102,6 +117,13 @@ return function (Parent : userdata?)
                         PaddingTop = UDim.new(0.2, 0);
                         PaddingLeft = UDim.new(0, 10);
                     };
+
+                    -- VIP
+                    TopBarButton {
+                        Visible = Player:FindFirstChild("VIP") ~= nil;
+                        Image = VIPImage();
+                        MaxImgSize = UDim2.new(0.8, 0, 0.8, 0);
+                    };
                     
                     -- Favourite
                     TopBarButton {
@@ -109,7 +131,10 @@ return function (Parent : userdata?)
                         MaxImgSize = UDim2.new(0.9, 0, 0.9, 0);
 
                         OnClick = function()
-                            AvatarEditorService:PromptSetFavorite(game.PlaceId, 1, true)
+                            pcall(function()
+                                AvatarEditorService:PromptSetFavorite(game.PlaceId, 1, true)
+                            end)
+                            
                         end
                     };
                     
@@ -120,10 +145,25 @@ return function (Parent : userdata?)
 
                         Visible = CanInviteFriend(Player);
                         OnClick = function()
-                            SocialService:PromptGameInvite(Player)
+                            pcall(function()
+                                SocialService:PromptGameInvite(Player)
+                            end)
                         end;
                     };
-                    
+
+                    -- Shop
+                    TopBarButton {
+                        Image = "rbxassetid://11385419674";
+                        MaxImgSize = UDim2.new(0.8, 0, 0.8, 0);
+
+                        Visible = ShopModuleInstalled(Player.PlayerGui);
+                        OnClick = function()
+                            print("Shop")
+                            if Player.PlayerGui:FindFirstChild("Shop") then
+                                Player.PlayerGui.Shop.State:Fire()
+                            end
+                        end;
+                    }
                 };
             };
         }
