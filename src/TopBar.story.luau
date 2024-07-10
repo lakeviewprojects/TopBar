@@ -28,11 +28,28 @@ local function TopBarButton(props)
                 CornerRadius = UDim.new(1, 0);
             };
 
+            Fusion:New "ImageLabel" {
+                Name = "BG";
+                Image = "rbxassetid://15197955006";
+                ImageColor3 = Color3.fromHex("#FFFFFF");
+                Size = UDim2.new(1, 0, 1, 0);
+                BackgroundTransparency = 1;
+                ImageTransparency = 0.9;
+
+                [Children] = {
+                    Fusion:New "UICorner" {
+                        CornerRadius = UDim.new(1, 0);
+                    };
+                }
+
+            };
+
             Fusion:New "ImageButton" {
                 BackgroundTransparency = 1;
                 Image = props.Image;
                 AnchorPoint = Vector2.new(0.5, 0.5);
                 Position = UDim2.new(0.5, 0, 0.5, 0);
+                ZIndex = 2;
 
                 --# Hover Color
                 ImageColor3 = Fusion:Spring(Fusion:Computed(function(use)
@@ -80,18 +97,23 @@ local function CanInviteFriend(sendingPlayer : userdata)
 end
 
 local ShopModuleInstalled = function(Parent : userdata)
-    local _shop = Parent:FindFirstChild("Shop")
-    return _shop ~= nil and _shop:IsA("ModuleScript") == true
+    if Parent ~= nil then 
+        local _shop = Parent:FindFirstChild("Shop")
+        return _shop ~= nil and _shop:IsA("ModuleScript") == true
+    end 
+    return nil
+end
+
+local function IsVIP()
+    local vip = Player ~= nil and Player:FindFirstChild("VIP") or nil
+    if vip ~= nil then 
+        return vip.Value
+    end 
+    return false 
 end
 
 local VIPImage = function()
-    local vip = Player:FindFirstChild("VIP")
-    if vip ~= nil then 
-        if vip.Value == true then 
-            return "rbxassetid://18400213004"
-        end 
-    end 
-    return "rbxassetid://18400214733"
+    return IsVIP() and "rbxassetid://18414235784" or "rbxassetid://18414237776"
 end
 
 return function (Parent : userdata?)
@@ -120,9 +142,17 @@ return function (Parent : userdata?)
 
                     -- VIP
                     TopBarButton {
-                        Visible = Player:FindFirstChild("VIP") ~= nil;
+                        Visible = ShopModuleInstalled(Player:FindFirstChild("PlayerGui")) and IsVIP();
                         Image = VIPImage();
                         MaxImgSize = UDim2.new(0.8, 0, 0.8, 0);
+
+                        OnClick = function()
+                            if Player:FindFirstChild("PlayerGui") then 
+                                if Player.PlayerGui:FindFirstChild("Shop") then
+                                    Player.PlayerGui.Shop.VIPState:Fire()
+                                end
+                            end;
+                        end;
                     };
                     
                     -- Favourite
@@ -156,11 +186,12 @@ return function (Parent : userdata?)
                         Image = "rbxassetid://11385419674";
                         MaxImgSize = UDim2.new(0.8, 0, 0.8, 0);
 
-                        Visible = ShopModuleInstalled(Player.PlayerGui);
+                        Visible = ShopModuleInstalled(Player:FindFirstChild("PlayerGui"));
                         OnClick = function()
-                            print("Shop")
-                            if Player.PlayerGui:FindFirstChild("Shop") then
-                                Player.PlayerGui.Shop.State:Fire()
+                            if Player:FindFirstChild("PlayerGui") then
+                                if Player.PlayerGui:FindFirstChild("Shop") then
+                                    Player.PlayerGui.Shop.State:Fire()
+                                end
                             end
                         end;
                     }

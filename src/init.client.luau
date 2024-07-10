@@ -1,5 +1,5 @@
-local Module = script:FindFirstChildOfClass("ModuleScript")
+local TopBar = script:FindFirstChild("TopBar.story")
 
-if Module ~= nil then 
-    require(Module)()
+if TopBar ~= nil then 
+    require(TopBar)()
 end
