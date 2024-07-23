@@ -113,7 +113,7 @@ local function IsVIP()
 end
 
 local VIPImage = function()
-    return IsVIP() and "rbxassetid://18414235784" or "rbxassetid://18414237776"
+    return IsVIP() == true and "rbxassetid://18414235752" or "rbxassetid://18414237740" 
 end
 
 return function (Parent : userdata?)
