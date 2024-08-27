@@ -20,7 +20,11 @@ local THEME_SECONDARY_HIGHLIGHT = Color3.fromHex("#CCCCCC")
 local TopBarItems = Fusion:Value({})
 
 local TopBarAPI = {}
+
 local TopBarVisible = Fusion:Value(true)
+
+-- For buttons with open/close 
+local Current = Fusion:Value(nil)
 
 --[[ Change TopBar Visible State ]]
 
@@ -33,11 +37,14 @@ end
     Cannot be destroyed once created, however they can be made visible or invisible. 
     Returns Fusion.Value
 --]]
-function TopBarAPI:TopBarButton(props : {Image : string, Callback : Callback, ColorFrom : Color3, ColorTo : Color3}) : Fusion.Value
+function TopBarAPI:TopBarButton(props : {Image : string, OpenCallback : Callback?, CloseCallback : Callback?, ToggleCallback : Callback?, ColorFrom : Color3?, ColorTo : Color3?}) : Fusion.Value
     -- Mouse or press
     local isHover = Fusion:Value(false) 
     -- Hide or show
     local isVisible = Fusion:Value(true)
+
+    -- for things with open and close 
+    local isOpen = Fusion:Value(false)
 
     local _button = Fusion:New "Frame" {
         BackgroundTransparency = 0.4;
@@ -101,7 +108,22 @@ function TopBarAPI:TopBarButton(props : {Image : string, Callback : Callback, Co
                 Size = UDim2.new(1, 0, 1, 0);
                 
                 [OnEvent "Activated"] = function()
-                    props.Callback()
+                    if props.ToggleCallback ~= nil then 
+                        props.ToggleCallback()
+                    else 
+                        if Fusion.peek(isOpen) == true then 
+                            props.CloseCallback()
+                            isOpen:set(false)
+                        else 
+                            if Fusion.peek(Current) ~= nil then 
+                                Fusion.peek(Current)()
+                            end
+                            props.OpenCallback()
+                            isOpen:set(true)
+                            Current:set(props.CloseCallback)
+                        end
+                    end
+                
                 end;
 
                 [OnEvent "MouseEnter"] = function()
@@ -171,5 +193,4 @@ return function (parent : Instance)
 
     return TopBarAPI
 end
-
 
