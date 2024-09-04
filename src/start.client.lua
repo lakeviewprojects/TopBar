@@ -14,7 +14,7 @@ end
 
 TopBarAPI:TopBarButton {
     Image = "rbxassetid://80940953305634";
-    Callback = AddToFavourites;
+    ToggleCallback = AddToFavourites;
     ColorFrom = Color3.fromHex("#c50000");
     ColorTo = Color3.fromHex("#ff0000");
 }
@@ -32,7 +32,7 @@ end
 if CanInviteFriend(Player) == true then 
     TopBarAPI:TopBarButton {
         Image = "rbxassetid://464353108";
-        Callback = function()
+        ToggleCallback = function()
             pcall(function()
                 SocialService:PromptGameInvite(Player)
             end)
