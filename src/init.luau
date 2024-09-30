@@ -37,7 +37,7 @@ end
     Cannot be destroyed once created, however they can be made visible or invisible. 
     Returns Fusion.Value
 --]]
-function TopBarAPI:TopBarButton(props : {Image : string, OpenCallback : Callback?, CloseCallback : Callback?, ToggleCallback : Callback?, ColorFrom : Color3?, ColorTo : Color3?}) : Fusion.Value
+function TopBarAPI:TopBarButton(props : {InitialState : Boolean?, Image : string, OpenCallback : Callback?, CloseCallback : Callback?, ToggleCallback : Callback?, ColorFrom : Color3?, ColorTo : Color3?}) : Fusion.Value
     -- Mouse or press
     local isHover = Fusion:Value(false) 
     -- Hide or show
@@ -112,13 +112,21 @@ function TopBarAPI:TopBarButton(props : {Image : string, OpenCallback : Callback
                         props.ToggleCallback()
                     else 
                         if Fusion.peek(isOpen) == true then 
-                            props.CloseCallback()
+                            if props.Force ~= nil then 
+                                props.Force(false)
+                            else 
+                                props.CloseCallback()
+                            end 
                             isOpen:set(false)
                         else 
                             if Fusion.peek(Current) ~= nil then 
                                 Fusion.peek(Current)()
                             end
-                            props.OpenCallback()
+                            if props.Force ~= nil then 
+                                props.Force(false)
+                            else 
+                                props.OpenCallback()
+                            end
                             isOpen:set(true)
                             Current:set(props.CloseCallback)
                         end
@@ -141,6 +149,13 @@ function TopBarAPI:TopBarButton(props : {Image : string, OpenCallback : Callback
     local items = Fusion.peek(TopBarItems)
     table.insert(items, _button);
     TopBarItems:set(items)
+
+    if props.InitialState == true then 
+        if props.OpenCallback ~= nil then 
+            props.OpenCallback()
+            isOpen:set(true)
+        end 
+    end
 
     --
     return isVisible

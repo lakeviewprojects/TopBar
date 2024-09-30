@@ -1,3 +1,4 @@
+local HttpService = game:GetService("HttpService")
 local Player = game:GetService("Players").LocalPlayer
 local TopBarAPI = require(script.Parent)()
 
@@ -30,13 +31,22 @@ local function CanInviteFriend(sendingPlayer : Player)
 end
 
 if CanInviteFriend(Player) == true then 
+    -- Reward purposes
+    local inviteOptions = Instance.new("ExperienceInviteOptions")
+    local _launchData = {
+        InviteOrigin = Player.UserId 
+    }
+    inviteOptions.LaunchData = HttpService:JSONEncode(_launchData);
+    --
     TopBarAPI:TopBarButton {
+
         Image = "rbxassetid://464353108";
         ToggleCallback = function()
             pcall(function()
-                SocialService:PromptGameInvite(Player)
+                SocialService:PromptGameInvite(Player, inviteOptions)
             end)
         end;
+
         ColorFrom = Color3.fromHex("#FFFFFF");
         ColorTo = Color3.fromHex("#ffff00");
     }
