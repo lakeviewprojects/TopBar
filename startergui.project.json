@@ -1,8 +1,0 @@
-{
-    "name":"TopBar",
-    "tree":{
-
-        "$ignoreUnknownInstances": true,
-        "$path": "src"
-    }
-}
