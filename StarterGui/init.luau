@@ -132,7 +132,7 @@ function TopBarAPI:TopBarButton(props: {
 	local _button = scope:New "Frame" {
 		BackgroundTransparency = 0.4;
 		BackgroundColor3 = THEME_PRIMARY;
-		Size = UDim2.new(1, 0, 1, 0);
+		Size = UDim2.new(0.7, 0, 0.7, 0);
 		Visible = isVisible;
 
 		[Children] = {
@@ -245,7 +245,7 @@ local function CreateFavouriteButton()
 	local _button = scope:New "Frame" {
 		BackgroundTransparency = 0.4;
 		BackgroundColor3 = THEME_PRIMARY;
-		Size = UDim2.new(1, 0, 1, 0);
+		Size = UDim2.new(0.7, 0, 0.7, 0);
 
 		[Children] = {
 			scope:New "UIAspectRatioConstraint" {};
