@@ -75,7 +75,8 @@ controls the button's visibility (set it to `false` to hide the button).
 
 | Prop | Type | Description |
 |---|---|---|
-| `Image` | `string` | Asset ID for the icon |
+| `Image` | `string?` | Asset ID for the icon (provide `Image` or `Text`, not both) |
+| `Text` | `UsedAs<string>?` | Text/emoji for the icon — reactive (provide `Image` or `Text`, not both) |
 | `ToggleCallback` | `() -> ()?` | Fire-and-forget action (mutually exclusive with Open/Close) |
 | `OpenCallback` | `() -> ()?` | Called when the button opens |
 | `CloseCallback` | `() -> ()?` | Called when the button closes |

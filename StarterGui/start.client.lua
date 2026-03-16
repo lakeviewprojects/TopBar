@@ -7,4 +7,7 @@
 	behaviour with a custom panel.
 ]]
 
-require(script.Parent)()
+local Players = game:GetService("Players")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+require(script.Parent)(PlayerGui)

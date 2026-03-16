@@ -118,7 +118,8 @@ end
 ]]
 function TopBarAPI:TopBarButton(props: {
 	InitialState:   boolean?,
-	Image:          string,
+	Image:          string?,
+	Text:           Fusion3.UsedAs<string>?,
 	OpenCallback:   (() -> ())?,
 	CloseCallback:  (() -> ())?,
 	ToggleCallback: (() -> ())?,
@@ -128,6 +129,47 @@ function TopBarAPI:TopBarButton(props: {
 	local isHover   = scope:Value(false)
 	local isVisible = scope:Value(true)
 	local isOpen    = scope:Value(false)
+
+	-- Icon: TextLabel when Text is provided, ImageLabel otherwise
+	local iconSize = scope:Spring(scope:Computed(function(use)
+		if use(isHover) then
+			return UDim2.new(0.8, 0, 0.8, 0)
+		else
+			return UDim2.new(0.7, 0, 0.7, 0)
+		end
+	end), 20)
+
+	local iconColor = scope:Spring(scope:Computed(function(use)
+		if use(isHover) then
+			return props.ColorTo or THEME_SECONDARY_HIGHLIGHT
+		else
+			return props.ColorFrom or THEME_SECONDARY
+		end
+	end))
+
+	local iconElement
+	if props.Text ~= nil then
+		iconElement = scope:New "TextLabel" {
+			BackgroundTransparency = 1;
+			Text = props.Text;
+			TextScaled = true;
+			TextColor3 = iconColor;
+			AnchorPoint = Vector2.new(0.5, 0.5);
+			Position = UDim2.new(0.5, 0, 0.5, 0);
+			ZIndex = 2;
+			Size = iconSize;
+		}
+	else
+		iconElement = scope:New "ImageLabel" {
+			BackgroundTransparency = 1;
+			Image = props.Image;
+			ImageColor3 = iconColor;
+			AnchorPoint = Vector2.new(0.5, 0.5);
+			Position = UDim2.new(0.5, 0, 0.5, 0);
+			ZIndex = 2;
+			Size = iconSize;
+		}
+	end
 
 	local _button = scope:New "Frame" {
 		BackgroundTransparency = 0.4;
@@ -159,29 +201,7 @@ function TopBarAPI:TopBarButton(props: {
 			};
 
 			-- Icon
-			scope:New "ImageLabel" {
-				BackgroundTransparency = 1;
-				Image = props.Image;
-				AnchorPoint = Vector2.new(0.5, 0.5);
-				Position = UDim2.new(0.5, 0, 0.5, 0);
-				ZIndex = 2;
-
-				ImageColor3 = scope:Spring(scope:Computed(function(use)
-					if use(isHover) then
-						return props.ColorTo or THEME_SECONDARY_HIGHLIGHT
-					else
-						return props.ColorFrom or THEME_SECONDARY
-					end
-				end));
-
-				Size = scope:Spring(scope:Computed(function(use)
-					if use(isHover) then
-						return UDim2.new(0.8, 0, 0.8, 0)
-					else
-						return UDim2.new(0.7, 0, 0.7, 0)
-					end
-				end), 20);
-			};
+			iconElement;
 
 			-- Hit area
 			scope:New "TextButton" {
@@ -341,12 +361,35 @@ end
 --------------------------------------------------------------------------------
 local TopBar = nil
 
+--------------------------------------------------------------------------------
+-- Optional Music mute button (only if Music module exists in ReplicatedFirst)
+--------------------------------------------------------------------------------
+local function CreateMuteButton()
+	local ReplicatedFirst = game:GetService("ReplicatedFirst")
+	local MusicModule = ReplicatedFirst:FindFirstChild("Music")
+	if not MusicModule then return end
+
+	local Music = require(MusicModule)
+	local MuteText = scope:Value(Music.Muted and "\u{1F508}" or "\u{1F50A}") -- 🔈 / 🔊
+
+	TopBarAPI:TopBarButton {
+		Text = MuteText;
+		ToggleCallback = function()
+			Music:ToggleMute()
+			MuteText:set(Music.Muted and "\u{1F508}" or "\u{1F50A}")
+		end;
+	}
+end
+
 local function Construct()
 	CreateFavouriteButton()
+	CreateMuteButton()
 
 	TopBar = scope:New "ScreenGui" {
 		Name = "TopBar";
 		Parent = GLOBAL_PARENT;
+		ResetOnSpawn = true;
+		DisplayOrder = 100;
 		ScreenInsets = Enum.ScreenInsets.TopbarSafeInsets;
 
 		[Children] = {
