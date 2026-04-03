@@ -30,10 +30,13 @@ local OnEvent   = Fusion3.OnEvent
 local peek      = Fusion3.peek
 
 --[[ Theme ]]
+local ThemeModule = ReplicatedFirst:FindFirstChild("Theme")
+local Theme = ThemeModule and require(ThemeModule) or nil
+
 local THEME_IMG                 = "rbxassetid://15197955006"
-local THEME_PRIMARY             = Color3.fromHex("#000000")
-local THEME_SECONDARY           = Color3.fromHex("#FFFFFF")
-local THEME_SECONDARY_HIGHLIGHT = Color3.fromHex("#CCCCCC")
+local THEME_PRIMARY             = Theme and Theme.PrimaryBackgroundColor3 or Color3.fromHex("#000000")
+local THEME_SECONDARY           = Theme and Theme.PrimaryTextColor3 or Color3.fromHex("#FFFFFF")
+local THEME_SECONDARY_HIGHLIGHT = Theme and Theme.SecondaryBackgroundColor3 or Color3.fromHex("#CCCCCC")
 
 --[[ Scope ]]
 local scope = Fusion3.scoped(Fusion3)
@@ -386,7 +389,7 @@ local function Construct()
 	CreateMuteButton()
 
 	TopBar = scope:New "ScreenGui" {
-		Name = "TopBar";
+		Name = "TopBarGui";
 		Parent = GLOBAL_PARENT;
 		ResetOnSpawn = true;
 		DisplayOrder = 100;

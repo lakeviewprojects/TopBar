@@ -18,7 +18,10 @@ Horizontal button strip rendered inside Roblox's topbar-safe inset area.
 
 ```
 ReplicatedFirst.Fusion3   (Fusion 0.3 / 0.4)
+ReplicatedFirst.Theme     (optional — falls back to hardcoded colours)
 ```
+
+TopBar now uses the **Theme** module for all colour values (background, icon tints, hover states) with built-in fallbacks to hardcoded defaults when Theme is not present. No configuration change is needed -- if Theme is available it is used automatically.
 
 ## Rojo Project Setup
 
