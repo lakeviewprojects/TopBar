@@ -23,6 +23,7 @@ GLOBAL_PARENT = script
 --[[ Dependencies ]]
 local AvatarEditorService = game:GetService("AvatarEditorService")
 local ReplicatedFirst     = game:GetService("ReplicatedFirst")
+local Workspace           = game:GetService("Workspace")
 
 local Fusion3   = require(ReplicatedFirst:WaitForChild("Fusion3"))
 local Children  = Fusion3.Children
@@ -35,13 +36,29 @@ local THEME_PRIMARY             = Color3.fromHex("#000000")
 local THEME_SECONDARY           = Color3.fromHex("#FFFFFF")
 local THEME_SECONDARY_HIGHLIGHT = Color3.fromHex("#CCCCCC")
 
+--[[ Compact / Dropdown Constants ]]
+local LV_LOGO           = "http://www.roblox.com/asset/?id=15208062328"
+local BUTTON_DIAMETER   = 36 -- approx pixel diameter of one button
+local BUTTON_GAP        = 10
+local BAR_PADDING_LEFT  = 10
+local SCREEN_FRACTION   = 1 / 5
+
 --[[ Scope ]]
 local scope = Fusion3.scoped(Fusion3)
 
 --[[ State ]]
-local TopBarItems   = scope:Value({})
-local TopBarVisible = scope:Value(true)
-local Current       = scope:Value(nil) -- close-callback for the currently open panel
+local TopBarItems    = scope:Value({})
+local TopBarVisible  = scope:Value(true)
+local Current        = scope:Value(nil) -- close-callback for the currently open panel
+local DropdownOpen   = scope:Value(false)
+local ViewportWidth  = scope:Value(1920) -- updated from camera ViewportSize
+
+-- Compact mode: true when the bar would exceed 1/3 of screen width
+local CompactMode = scope:Computed(function(use)
+	local count = #use(TopBarItems)
+	local barWidth = BAR_PADDING_LEFT + count * BUTTON_DIAMETER + math.max(0, count - 1) * BUTTON_GAP
+	return barWidth > use(ViewportWidth) * SCREEN_FRACTION
+end)
 
 --[[ Favourite Button — replaceable action ]]
 local FavouriteAction = {
@@ -174,7 +191,7 @@ function TopBarAPI:TopBarButton(props: {
 	local _button = scope:New "Frame" {
 		BackgroundTransparency = 0.4;
 		BackgroundColor3 = THEME_PRIMARY;
-		Size = UDim2.new(0.7, 0, 0.7, 0);
+		Size = UDim2.new(1, 0, 1, 0);
 		Visible = isVisible;
 
 		[Children] = {
@@ -265,7 +282,7 @@ local function CreateFavouriteButton()
 	local _button = scope:New "Frame" {
 		BackgroundTransparency = 0.4;
 		BackgroundColor3 = THEME_PRIMARY;
-		Size = UDim2.new(0.7, 0, 0.7, 0);
+		Size = UDim2.new(1, 0, 1, 0);
 
 		[Children] = {
 			scope:New "UIAspectRatioConstraint" {};
@@ -381,9 +398,142 @@ local function CreateMuteButton()
 	}
 end
 
+--------------------------------------------------------------------------------
+-- Compact-mode: LV logo button
+--------------------------------------------------------------------------------
+local function CreateLVButton()
+	local isHover = scope:Value(false)
+
+	return scope:New "Frame" {
+		Name = "LVButton";
+		BackgroundTransparency = 0.4;
+		BackgroundColor3 = THEME_PRIMARY;
+		Size = UDim2.new(1, 0, 1, 0);
+		LayoutOrder = -1; -- always first in the list
+		Visible = CompactMode;
+
+		[Children] = {
+			scope:New "UIAspectRatioConstraint" {};
+
+			scope:New "UICorner" {
+				CornerRadius = UDim.new(1, 0);
+			};
+
+			scope:New "ImageLabel" {
+				Name = "BG";
+				Image = THEME_IMG;
+				ImageColor3 = THEME_SECONDARY;
+				Size = UDim2.new(1, 0, 1, 0);
+				BackgroundTransparency = 1;
+				ImageTransparency = 0.9;
+
+				[Children] = {
+					scope:New "UICorner" {
+						CornerRadius = UDim.new(1, 0);
+					};
+				};
+			};
+
+			-- LV logo icon
+			scope:New "ImageLabel" {
+				BackgroundTransparency = 1;
+				Image = LV_LOGO;
+				ImageColor3 = scope:Spring(scope:Computed(function(use)
+					if use(isHover) then
+						return THEME_SECONDARY_HIGHLIGHT
+					else
+						return THEME_SECONDARY
+					end
+				end));
+				AnchorPoint = Vector2.new(0.5, 0.5);
+				Position = UDim2.new(0.5, 0, 0.5, 0);
+				ZIndex = 2;
+				Size = scope:Spring(scope:Computed(function(use)
+					if use(isHover) then
+						return UDim2.new(0.8, 0, 0.8, 0)
+					else
+						return UDim2.new(0.7, 0, 0.7, 0)
+					end
+				end), 20);
+			};
+
+			-- Hit area
+			scope:New "TextButton" {
+				BackgroundTransparency = 1;
+				TextTransparency = 1;
+				Size = UDim2.new(1, 0, 1, 0);
+
+				[OnEvent "Activated"] = function()
+					DropdownOpen:set(not peek(DropdownOpen))
+				end;
+
+				[OnEvent "MouseEnter"] = function()
+					isHover:set(true)
+				end;
+
+				[OnEvent "MouseLeave"] = function()
+					isHover:set(false)
+				end;
+			};
+		};
+	}
+end
+
 local function Construct()
 	CreateFavouriteButton()
 	CreateMuteButton()
+
+	local lvButton = CreateLVButton()
+
+	-- Track viewport width from the camera
+	local camera = Workspace.CurrentCamera
+	if camera then
+		local function updateViewport()
+			ViewportWidth:set(camera.ViewportSize.X)
+		end
+		updateViewport()
+		camera:GetPropertyChangedSignal("ViewportSize"):Connect(updateViewport)
+	end
+
+	-- Close dropdown when leaving compact mode
+	scope:Observer(CompactMode):onChange(function()
+		if not peek(CompactMode) then
+			DropdownOpen:set(false)
+		end
+	end)
+
+	-- Items container — holds all registered buttons, switches between
+	-- inline (horizontal, same row as LV) and dropdown (vertical, below LV)
+	local itemsFrame = scope:New "Frame" {
+		Name = "Items";
+		BackgroundTransparency = 1;
+		AutomaticSize = Enum.AutomaticSize.XY;
+		Size = UDim2.new(0, 0, 0, 0);
+		Visible = scope:Computed(function(use)
+			return not use(CompactMode) or use(DropdownOpen)
+		end);
+
+		[Children] = {
+			scope:New "UIListLayout" {
+				FillDirection = scope:Computed(function(use)
+					if use(CompactMode) then
+						return Enum.FillDirection.Vertical
+					else
+						return Enum.FillDirection.Horizontal
+					end
+				end);
+				Padding = scope:Computed(function(use)
+					if use(CompactMode) then
+						return UDim.new(0, 6)
+					else
+						return UDim.new(0, BUTTON_GAP)
+					end
+				end);
+			};
+
+			TopBarItems;
+		};
+	}
 
 	TopBar = scope:New "ScreenGui" {
 		Name = "TopBarGui";
@@ -394,22 +544,39 @@ local function Construct()
 
 		[Children] = {
 			scope:New "Frame" {
+				Name = "TopBarFrame";
 				BackgroundTransparency = 1;
-				Size = UDim2.new(1, 0, 1, 0);
+				Size = UDim2.new(1, 0, 0.75, 0);
+				AnchorPoint = Vector2.new(0, 0.5);
+				Position = UDim2.new(0, 0, 0.5, 0);
+				ClipsDescendants = false;
 				Visible = TopBarVisible;
 
 				[Children] = {
 					scope:New "UIListLayout" {
-						FillDirection = Enum.FillDirection.Horizontal;
-						Padding = UDim.new(0, 10);
+						FillDirection = scope:Computed(function(use)
+							if use(CompactMode) then
+								return Enum.FillDirection.Vertical
+							else
+								return Enum.FillDirection.Horizontal
+							end
+						end);
+						Padding = scope:Computed(function(use)
+							if use(CompactMode) then
+								return UDim.new(0, 4)
+							else
+								return UDim.new(0, BUTTON_GAP)
+							end
+						end);
+						SortOrder = Enum.SortOrder.LayoutOrder;
 					};
 
 					scope:New "UIPadding" {
-						PaddingTop = UDim.new(0.2, 0);
-						PaddingLeft = UDim.new(0, 10);
+						PaddingLeft = UDim.new(0, BAR_PADDING_LEFT);
 					};
 
-					TopBarItems;
+					lvButton;
+					itemsFrame;
 				};
 			};
 		};
