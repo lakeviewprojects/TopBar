@@ -41,7 +41,7 @@ local LV_LOGO           = "http://www.roblox.com/asset/?id=15208062328"
 local BUTTON_DIAMETER   = 36 -- approx pixel diameter of one button
 local BUTTON_GAP        = 10
 local BAR_PADDING_LEFT  = 10
-local SCREEN_FRACTION   = 1 / 5
+local SCREEN_FRACTION   = 0.15
 
 --[[ Scope ]]
 local scope = Fusion3.scoped(Fusion3)
